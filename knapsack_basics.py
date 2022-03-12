@@ -56,15 +56,6 @@ test5 = {
 
 tests = [test0, test1, test2, test3, test4, test5]
 
-"""
-The goal is to use memoization to optimize the working of this function. In other
-words, each time the same combo is given as arg to the function, instead of 
-calculating anew the result, we retrieve the result. 
-Given that amongst the args, the only one to change are capacity and idx, I need to 
-store the two. Then, whenever the same combo comes along, instead recomputing, I 
-retrieve the result. 
-"""
-
 # the most we can spend on a client.
 max_capacity = 500
 

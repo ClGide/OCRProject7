@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 
 def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
     """parses the excel worksheet and returns each share's price and
-    buyed percentage."""
+    bought percentage."""
     wb = load_workbook(filename)
     ws = wb.active
 

@@ -1,48 +1,53 @@
-from typing import Sequence, Tuple
-from openpyxl import load_workbook
 from math import ceil
+from typing import Sequence, Tuple, Dict
 
-wb1 = load_workbook("dataset1_Python_P7.xlsx")
-ws1 = wb1.active
-
-weights_table1 = []
-percentage_profits_table1 = []
-for val in ws1.values:
-    name, weight, percentage_profit = val[0].split(',')
-    weights_table1.append(weight)
-    percentage_profits_table1.append(percentage_profit)
-
-# converting prices from string to float except for the first item ('price')
-weights_table1 = [float(weight) for weight in weights_table1[1:]]
-
-# converting profits from string to float except for the first item ('profit')
-percentage_profits_table1 = [float(percentage)
-                             for percentage
-                             in percentage_profits_table1[1:]]
+from openpyxl import load_workbook
 
 
-wb2 = load_workbook("dataset2_Python_P7.xlsx")
-ws2 = wb2.active
+def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
+    """parses the excel worksheet and returns each share's price and
+    buyed percentage."""
+    wb = load_workbook(filename)
+    ws = wb.active
 
-weights_table2 = []
-percentage_profits_table2 = []
-for val in ws2.values:
-    name, weight, percentage_profit = val[0].split(',')
-    weights_table2.append(weight)
-    percentage_profits_table2.append(percentage_profit)
+    names_table = []
+    weights_table = []
+    percentage_profits_table = []
 
-# converting prices from string to float except for the first item ('price')
-weights_table2 = [float(weight) for weight in weights_table2[1:]]
+    for val in ws.values:
+        # the values are originally given in the worksheet in a csv style.
+        name, weight, percentage_profit = val[0].split(',')
+        names_table.append(name)
+        weights_table.append(weight)
+        percentage_profits_table.append(percentage_profit)
 
-# converting profits from string to float except for the first item ('profit')
-percentage_profits_table2 = [float(percentage)
-                             for percentage
-                             in percentage_profits_table2[1:]]
+    # mapping the weights to their share
+    weight_name = dict(zip(weights_table, names_table))
+    weight_name.pop('price')
+    weight_name = {ceil(float(key)): value for key, value in weight_name.items()}
+
+    # converting prices from str to float except for the first item ('price')
+    weights_table = [float(weight) for weight in weights_table[1:]]
+
+    # in order to make the dynamic func below work, we need to return
+    # a list of integers. We will use ceil to avoid exceeding the limit.
+    weights_table = [ceil(w) for w in weights_table]
+
+    # cleaning corrupted data
+    weights_table = [-w if w < 0 else w for w in weights_table]
+
+    # converting profits from str to float except for the first item ('profit')
+    percentage_profits_table = [float(percentage)
+                                for percentage
+                                in percentage_profits_table[1:]]
+
+    return weight_name, weights_table, percentage_profits_table
 
 
 def what_profit(profits_percentage: Sequence,
-                weights: Sequence) -> Sequence:
-    """given the weights and the percentages taken, returns the profits done."""
+                weights: Sequence) -> Sequence[float]:
+    """given the weights and the percentages taken,
+     returns the profits done."""
     profits = []
     for cost, percentage in zip(weights, profits_percentage):
         profits.append(cost * (percentage / 100))
@@ -51,28 +56,21 @@ def what_profit(profits_percentage: Sequence,
 
 def max_profit_dynamic(weights: Sequence[int],
                        profits_percentage: Sequence[int],
-                       capacity: int) -> Tuple[list, int]:
-
+                       capacity: int) -> Tuple[Sequence[int], int]:
     profits = what_profit(profits_percentage, weights)
 
-    # in order to make the dynamic func work, we need make out of weights
-    # a list of integers. We will use ceil to avoid exceed the limit.
-    weights = [ceil(w) for w in weights]
-
-    # cleaning corrupted data
-    weights = [-w if w < 0 else w for w in weights]
-
-    # the +1 in capacity and +1 in range is so that we can let
+    # the +1 in capacity and range is so that we can let
     # the first column == 0
     table = [[0 for _ in range(capacity + 1)] for _ in range(len(weights) + 1)]
 
-    for i in range(len(weights)):  # remember weights and profits are \\ seqs.
-        for c in range(1, capacity + 1):  # we want to keep the first col == 0.
+    for i in range(len(weights)):
+        for c in range(1,
+                       capacity + 1):  # starts at 1 to keep the 1st col == 0.
             if weights[i] <= c:
                 table[i + 1][c] = max(table[i][c],
                                       profits[i] + table[i][c - weights[i]])
 
-    # in order to know which shares we selected.
+    # parse the table to identify the chosen shares.
     idx = len(weights)
     max_cap = capacity
     bag = []
@@ -85,3 +83,19 @@ def max_profit_dynamic(weights: Sequence[int],
             idx -= 1
 
     return bag, table[-1][-1]
+
+
+def parsing_data_return_shares(filename: str, capacity: int):
+    """parses the excel file and returns the most profitable combination
+     of shares that respects the max capacity constraint AND their total
+      value. """
+
+    weight_name, weights, profit_percentages = name_weights_profits(filename)
+    bag, max_profit = max_profit_dynamic(weights, profit_percentages, capacity)
+    bag = [weight_name[weight] for weight in bag]
+    return bag, max_profit
+
+
+if __name__ == "__main__":
+    parsing_data_return_shares("dataset1_Python_P7.xlsx", 500)
+   

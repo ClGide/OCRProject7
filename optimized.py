@@ -1,7 +1,8 @@
 from math import ceil
-from typing import Sequence, Tuple, Dict
+from typing import Sequence, Tuple
 
 from openpyxl import load_workbook
+from time import time
 
 
 def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
@@ -24,7 +25,8 @@ def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
     # mapping the weights to their share
     weight_name = dict(zip(weights_table, names_table))
     weight_name.pop('price')
-    weight_name = {ceil(float(key)): value for key, value in weight_name.items()}
+    weight_name = {ceil(float(key)): value for key, value in
+                   weight_name.items()}
 
     # converting prices from str to float except for the first item ('price')
     weights_table = [float(weight) for weight in weights_table[1:]]
@@ -59,14 +61,16 @@ def max_profit_dynamic(weights: Sequence[int],
                        capacity: int) -> Tuple[Sequence[int], int]:
     profits = what_profit(profits_percentage, weights)
 
-    # the +1 in capacity and range is so that we can let
-    # the first column == 0
+    # the +1 in capacity and range is so that we can let the first column and
+    # first row == 0.
     table = [[0 for _ in range(capacity + 1)] for _ in range(len(weights) + 1)]
 
     for i in range(len(weights)):
-        for c in range(1,
-                       capacity + 1):  # starts at 1 to keep the 1st col == 0.
-            if weights[i] <= c:
+        # starts at 1 to keep the 1st col == 0.
+        for c in range(1, capacity + 1):
+            if weights[i] > c:
+                table[i+1][c] = table[i][c]
+            else:
                 table[i + 1][c] = max(table[i][c],
                                       profits[i] + table[i][c - weights[i]])
 
@@ -97,5 +101,9 @@ def parsing_data_return_shares(filename: str, capacity: int):
 
 
 if __name__ == "__main__":
-    parsing_data_return_shares("dataset1_Python_P7.xlsx", 500)
-   
+
+    s = time()
+    a = parsing_data_return_shares("dataset2_Python_P7.xlsx", 500)
+    e = time()        
+    print(f"the algorithm takes {e-s} sec to complete")
+    

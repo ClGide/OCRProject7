@@ -5,6 +5,16 @@ from openpyxl import load_workbook
 from time import time
 
 
+def what_profit(profits_percentage: Sequence,
+                weights: Sequence) -> Sequence[float]:
+    """given the weights and the percentages taken,
+     returns the profits done."""
+    profits = []
+    for cost, percentage in zip(weights, profits_percentage):
+        profits.append(cost * (percentage / 100))
+    return profits
+
+
 def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
     """parses the excel worksheet and returns each share's price and
     bought percentage."""
@@ -28,38 +38,30 @@ def name_weights_profits(filename: str) -> Tuple[Sequence[int]]:
     weight_name = {ceil(float(key)): value for key, value in
                    weight_name.items()}
 
-    # converting prices from str to float except for the first item ('price')
-    weights_table = [float(weight) for weight in weights_table[1:]]
-
-    # in order to make the dynamic func below work, we need to return
-    # a list of integers. We will use ceil to avoid exceeding the limit.
-    weights_table = [ceil(w) for w in weights_table]
-
-    # cleaning corrupted data
-    weights_table = [-w if w < 0 else w for w in weights_table]
-
     # converting profits from str to float except for the first item ('profit')
     percentage_profits_table = [float(percentage)
                                 for percentage
                                 in percentage_profits_table[1:]]
 
-    return weight_name, weights_table, percentage_profits_table
+    # converting prices from str to float except for the first item ('price')
+    weights_table = [float(weight) for weight in weights_table[1:]]
 
+    # cleaning corrupted data
+    weights_table = [-w if w < 0 else w for w in weights_table]
 
-def what_profit(profits_percentage: Sequence,
-                weights: Sequence) -> Sequence[float]:
-    """given the weights and the percentages taken,
-     returns the profits done."""
-    profits = []
-    for cost, percentage in zip(weights, profits_percentage):
-        profits.append(cost * (percentage / 100))
-    return profits
+    # computing the profits each share would generate
+    profits = what_profit(percentage_profits_table, weights_table)
+
+    # in order to make the dynamic func below work, we need to return
+    # a list of integers. We will use ceil to avoid exceeding the limit.
+    weights_table = [ceil(w) for w in weights_table]
+
+    return weight_name, weights_table, profits
 
 
 def max_profit_dynamic(weights: Sequence[int],
-                       profits_percentage: Sequence[int],
+                       profits: Sequence[int],
                        capacity: int) -> Tuple[Sequence[int], int]:
-    profits = what_profit(profits_percentage, weights)
 
     # the +1 in capacity and range is so that we can let the first column and
     # first row == 0.
@@ -94,16 +96,16 @@ def parsing_data_return_shares(filename: str, capacity: int):
      of shares that respects the max capacity constraint AND their total
       value. """
 
-    weight_name, weights, profit_percentages = name_weights_profits(filename)
-    bag, max_profit = max_profit_dynamic(weights, profit_percentages, capacity)
-    bag = [weight_name[weight] for weight in bag]
+    weights_names, weights, profits = name_weights_profits(filename)
+    bag, max_profit = max_profit_dynamic(weights, profits, capacity)
+    bag = [weights_names[weight] for weight in bag]
     return bag, max_profit
 
 
 if __name__ == "__main__":
 
     s = time()
-    a = parsing_data_return_shares("dataset2_Python_P7.xlsx", 500)
-    e = time()        
+    a = parsing_data_return_shares("dataset1_Python_P7.xlsx", 500)
+    e = time()
+    print(a)
     print(f"the algorithm takes {e-s} sec to complete")
-    

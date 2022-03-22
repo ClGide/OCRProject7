@@ -1,3 +1,6 @@
+""" Dynamic Programming solution to the 0/1 Knapsack Problem. """
+
+
 from math import ceil
 from typing import Sequence, Tuple
 

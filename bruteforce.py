@@ -1,3 +1,16 @@
+""" Brute force solution to the 0/1 Knapsack Problem.
+
+The problem is the following. We are given a finite number of items. Each item
+has a value and a weight. We want to maximize the value of the set of items we
+choose. However, there is a constraint. The set of items we choose 
+cannot surpass a given weight. Metaphorically, the bag where we store the 
+chosen items has a maximum capacity. In our case, the items are shares of
+different companies. The weights are their prices and the values are the 
+returns we would get after two years. The values are expressed as a percentage
+of the weights. E.g if the share's price is 200e and we are promised 10% after 
+2 years, the value is actually 20e.   
+"""
+
 from itertools import combinations
 from typing import Sequence, Generator, Tuple
 
